@@ -57,8 +57,7 @@ RUN curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/2.3.4/sbcl-2
     rm -rf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 \
        sbcl-2.3.4-x86-64-linux
 
-RUN usermod -d ${HOME} default && \
-    chown -R 1001:0 ${HOME} && \
+RUN chown -R 1001:0 ${HOME} && \
     chmod -R g+rwX,o= ${HOME}
 
 USER 1001
