@@ -9,7 +9,7 @@ ENV HOME=/home/ocicl \
     LC_ALL=C.utf8 \
     LANG=C.utf8 \
     LANGUAGE=C.utf8 \
-    SBCL_VERSION=2.3.3 \
+    SBCL_VERSION=2.3.4 \
     LIBEV_VERSION=4.33 \
     LIBSSH2_VERSION=1.10.0
 
@@ -48,14 +48,14 @@ RUN curl -O "https://www.libssh2.org/download/libssh2-${LIBSSH2_VERSION}.tar.gz"
     mkdir -p ${HOME}/.ssh && \
     dnf remove -y openssl-devel
 
-RUN curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/${SBCL_VERSION}/sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2" && \
+RUN curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/2.3.4/sbcl-2.3.4-x86-64-linux-binary.tar.bz2" && \
     curl -L -O https://beta.quicklisp.org/quicklisp.lisp && \
-    tar -xvf sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2 && \
-    cd sbcl-${SBCL_VERSION}-x86-64-linux && \
+    tar -xvf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 && \
+    cd sbcl-2.3.4-x86-64-linux && \
     ./install.sh && \
     cd .. && \
-    rm -rf sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2 \
-       sbcl-${SBCL_VERSION}-x86-64-linux
+    rm -rf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 \
+       sbcl-2.3.4-x86-64-linux
 
 RUN usermod -d ${HOME} default && \
     chown -R 1001:0 ${HOME} && \
