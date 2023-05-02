@@ -14,7 +14,7 @@ ENV HOME=/home/ocicl \
     LIBSSH2_VERSION=1.10.0
 
 RUN rm /etc/rhsm-host && \
-    mkdir ${HOME} \
+    mkdir ${HOME} && \
     yum install -y \
         bzip2 git make patch automake autoconf libtool gcc gcc-c++ libuv openssl-devel && \
     yum update -y && \
