@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8:latest
+FROM registry.access.redhat.com/ubi7:latest
 
 # This image provides a Common Lisp environment based on QuickLisp and
 # that you can use to run your Common Lisp applications.
