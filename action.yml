@@ -10,8 +10,7 @@ runs:
   steps:
     - run: curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/2.3.4/sbcl-2.3.4-x86-64-linux-binary.tar.bz2" && curl -L -O https://beta.quicklisp.org/quicklisp.lisp && tar -xvf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 && cd sbcl-2.3.4-x86-64-linux && ./install.sh && cd .. && rm -rf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 sbcl-2.3.4-x86-64-linux
       shell: bash
-    - id: Mention project name
-      run: echo ${{ inputs.project-name }}
+    - run: echo ${{ inputs.project-name }}
       shell: bash
     - run: sbcl --version
       shell: bash
