@@ -17,7 +17,9 @@ runs:
         if [ $? -eq 0 ]; then
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
-          case $PROTOCOL in
+          echo ${PROTCOL}
+          echo ${URI}
+          case ${PROTOCOL} in
             git) git clone ${URI}
             ;;
             *) echo Unrecognized PROTOCOL ;
