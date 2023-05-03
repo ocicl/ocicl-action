@@ -19,6 +19,8 @@ runs:
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
           echo ${PROTCOL}
           echo ${URI}
+          mkdir src
+          cd src
           case ${PROTOCOL} in
             git) git clone ${URI}
             ;;
@@ -27,7 +29,13 @@ runs:
             ;;
           esac;
           COMMIT=$(grep commit README.org | awk '{ print $4 }');
-          find . -type d
+          SRCDIR=$(ls)
+          cd ${SRCDIR}
+          git reset --hard ${COMMIT}
+          rm -rf .git*
+          cd ..
+          tar cvfz $SRCDIR-$COMMIT.tar.gz $SRCDIR
+          ls -l
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
