@@ -12,14 +12,11 @@ runs:
       shell: bash
     - uses: actions/checkout@v3
     - run: |
-        ls -l
         grep source README.org;
         if [ $? -eq 0 ]; then
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
           COMMIT=$(grep commit README.org | awk '{ print $4 }');
-          echo ${PROTCOL}
-          echo ${URI}
           mkdir src
           cd src
           case ${PROTOCOL} in
@@ -34,8 +31,15 @@ runs:
           git reset --hard ${COMMIT}
           rm -rf .git*
           cd ..
-          tar cvfz $SRCDIR-$COMMIT.tar.gz $SRCDIR
-          ls -l
+          tar cvfz $SRCDIR-$(date +%Y%m%d)-$COMMIT.tar.gz $SRCDIR
+          cat << EOF > ~/.sbclrc
+            (require 'asdf)
+            (push #p"${SRCDIR}" asdf:*central-registry*)
+            (asdf:load-system "cl-ppcre")
+            (quit)
+          EOF
+          cat ~/.sbclrc
+          ~/bin/sbcl
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
