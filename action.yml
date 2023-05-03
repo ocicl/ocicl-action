@@ -32,7 +32,9 @@ runs:
           rm -rf .git*
           cd ..
           tar cvfz $SRCDIR-$(date +%Y%m%d)-$COMMIT.tar.gz $SRCDIR
-          echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)\" asdf:*central-registry*) (asdf:load-system \"cl-ppcre\") (quit)" > ~/.sbclrc
+          echo $(pwd)
+          ls -l $(pwd)
+          echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"cl-ppcre\") (quit)" > ~/.sbclrc
           cat ~/.sbclrc
           ~/bin/sbcl
         fi
