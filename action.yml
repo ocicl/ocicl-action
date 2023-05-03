@@ -16,7 +16,8 @@ runs:
         if [ $? -eq 0 ]; then
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
-          COMMIT=$(grep commit README.org | awk '{ print $4 }');
+          COMMIT=$(grep commit README.org | awk '{ print $4 }') ;
+          SYSTEMS=$(grep systems README.org | cut -f3 -d \|) ;
           mkdir src
           cd src
           case ${PROTOCOL} in
@@ -31,12 +32,11 @@ runs:
           git reset --hard ${COMMIT}
           rm -rf .git*
           cd ..
-          tar cvfz $SRCDIR-$(date +%Y%m%d)-$COMMIT.tar.gz $SRCDIR
-          echo $(pwd)
-          ls -l $(pwd)
-          echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"cl-ppcre\") (quit)" > ~/.sbclrc
-          cat ~/.sbclrc
-          ~/bin/sbcl
+          tar cvfz ${SRCDIR}-$(date +%Y%m%d)-${COMMIT}.tar.gz ${SRCDIR}
+          for S in ${SYSTEMS}; do
+            echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            ~/bin/sbcl ;
+          done;
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
