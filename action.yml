@@ -17,7 +17,7 @@ runs:
           cd src
           case ${PROTOCOL} in
             git) git clone ${URI} ;
-                 VERSION=$(date +%Y%m%d)-$(grep commit README.org | awk '{ print $4 }') ;
+                 VERSION=$(date +%Y%m%d)-$(grep commit ../README.org | awk '{ print $4 }') ;
                  SRCDIR=$(ls) ;
                  cd ${SRCDIR} ;
                  git reset --hard ${COMMIT} ;
@@ -25,7 +25,7 @@ runs:
                  cd .. ;
                  ;;
             file) curl -L -O ${URI} ;
-                  VERSION=$(grep source README.org| awk '{ print $4 }') ;
+                  VERSION=$(grep source ../README.org | awk '{ print $4 }') ;
                   ;;
             *) echo Unrecognized PROTOCOL ;
                exit 1 ;
