@@ -12,7 +12,6 @@ runs:
         if [ $? -eq 0 ]; then
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
-          COMMIT=$(
           SYSTEMS=$(grep systems README.org | cut -f3 -d \|) ;
           mkdir src
           cd src
