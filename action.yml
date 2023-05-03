@@ -26,6 +26,8 @@ runs:
                exit 1;
             ;;
           esac;
+          COMMIT=$(grep commit README.org | awk '{ print $4 }');
+          find . -type d
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
