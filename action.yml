@@ -18,10 +18,11 @@ runs:
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
           case $PROTOCOL in
-            git) git clone $URI;
-            *) error Unrecognized PROTOCOL;;
+            git) git clone $URI
             ;;
-          esac
+            *) error Unrecognized PROTOCOL
+            ;;
+          esac;
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
