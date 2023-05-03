@@ -17,6 +17,7 @@ runs:
         if [ $? -eq 0 ]; then
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
+          COMMIT=$(grep commit README.org | awk '{ print $4 }');
           echo ${PROTCOL}
           echo ${URI}
           mkdir src
@@ -28,7 +29,6 @@ runs:
                exit 1;
             ;;
           esac;
-          COMMIT=$(grep commit README.org | awk '{ print $4 }');
           SRCDIR=$(ls)
           cd ${SRCDIR}
           git reset --hard ${COMMIT}
