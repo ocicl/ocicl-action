@@ -42,6 +42,7 @@ runs:
           echo *****************************************************************************
           echo *****************************************************************************
           echo *****************************************************************************
+          set -x
           VERSION="1.0.0"
           curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
           mkdir -p oras-install/
