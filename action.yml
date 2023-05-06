@@ -26,6 +26,7 @@ runs:
     - run: |
         grep source README.org;
         if [ $? -eq 0 ]; then
+          NAME=$(head -1 README.org | cut -d\  -f2)
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
           URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
           SYSTEMS=$(grep systems README.org | cut -f3 -d \|) ;
@@ -47,7 +48,7 @@ runs:
                exit 1 ;
                ;;
           esac ;
-          tar cvfz ${SRCDIR}-${VERSION}.tar.gz ${SRCDIR} ;
+          tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
           for S in ${SYSTEMS}; do
             echo ================================================================================
             echo ${S}
@@ -55,9 +56,9 @@ runs:
             echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
             ~/bin/sbcl ;
           done;
-          echo *****************************************************************************
-          echo *****************************************************************************
-          echo *****************************************************************************
+          set -x
+          echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+          oras push ghcr.io/ocicl/${NAME}:latest ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
         fi
       shell: bash
     - run: $HOME/bin/sbcl --version
