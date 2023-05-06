@@ -42,7 +42,7 @@ runs:
                  rm -rf .git* ;
                  cd .. ;
                  ;;
-            file) VERSION=$(grep source ../README.org | awk '{ print $4 }') ;
+            file) VERSION=$(grep version ../README.org | awk '{ print $4 }') ;
                   curl -L -o ${NAME}-${VERSION}.tar.gz ${URI} ;
                   ;;
             *) echo Unrecognized PROTOCOL ;
