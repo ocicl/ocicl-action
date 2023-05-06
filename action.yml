@@ -3,8 +3,6 @@ name: 'ocicl'
 description: 'Publish an ocicl artifact'
 runs:
   using: "composite"
-  permissions:
-    packages: write
   steps:
     - name: Install SBCL
       run: |
