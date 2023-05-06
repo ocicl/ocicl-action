@@ -63,7 +63,8 @@ runs:
             echo ================================================================================
             echo ${S}
             echo ================================================================================
-            echo "(require :asdf) (push #p\"$(cd ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            echo "(require :asdf) (push #p\"$(cd ~/ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            cat ~/.sbclrc
             ~/bin/sbcl ;
           done;
           set -x
