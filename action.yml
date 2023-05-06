@@ -18,7 +18,6 @@ runs:
         set -x
         git clone --depth=1 https://github.com/ocicl/ocicl-client.git
         echo "(require :asdf) (push #p\"$(cd ocicl-client; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc ;
-        ~/bin/sbcl --eval "(progn (asdf:load-system :cl-ppcre) (quit))"
         ls -l ~/.local/bin
         ls -l ~/.local/share/ocicl/
       shell: bash
@@ -64,7 +63,7 @@ runs:
             echo ================================================================================
             echo ${S}
             echo ================================================================================
-            echo "(require :asdf) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            echo "(push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" >> ~/.sbclrc ;
             ~/bin/sbcl ;
           done;
           set -x
