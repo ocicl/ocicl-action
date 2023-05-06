@@ -41,15 +41,17 @@ runs:
                  git reset --hard ${COMMIT} ;
                  rm -rf .git* ;
                  cd .. ;
+                 tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
                  ;;
             file) VERSION=$(grep version ../README.org | awk '{ print $4 }') ;
                   curl -L -o ${NAME}-${VERSION}.tar.gz ${URI} ;
+                  tar xvf ${NAME}-${VERSION}.tar.gz
+                  SRCDIR=$(ls -1 | grep -v tar.gz)
                   ;;
-            *) echo Unrecognized PROTOCOL ;
+            *) echo Unrecognized PROTOCOL ${PROTOCOL} ;
                exit 1 ;
                ;;
           esac ;
-          tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
           for S in ${SYSTEMS}; do
             echo ================================================================================
             echo ${S}
