@@ -24,6 +24,7 @@ runs:
       shell: bash
     - uses: actions/checkout@v3
     - run: |
+        set -x
         grep source README.org;
         if [ $? -eq 0 ]; then
           NAME=$(head -1 README.org | cut -d\  -f2)
