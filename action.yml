@@ -18,6 +18,8 @@ runs:
         set -x
         git clone --depth=1 https://github.com/ocicl/ocicl-client.git
         echo "(require :asdf) (push #p\"$(cd ocicl-client; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc ;
+        sbcl --eval "(quit)"
+        find ~/.local
       shell: bash
     - name: Install ORAS
       run: |
@@ -61,7 +63,7 @@ runs:
             echo ================================================================================
             echo ${S}
             echo ================================================================================
-            echo "(push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" >> ~/.sbclrc ;
+            echo "(require :asdf) (push #p\"$(cd ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
             ~/bin/sbcl ;
           done;
           set -x
