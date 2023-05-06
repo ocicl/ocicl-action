@@ -15,8 +15,12 @@ runs:
       shell: bash
     - name: Install the ocicl client
       run: |
+        set -x
         git clone --depth=1 https://github.com/ocicl/ocicl-client.git
         echo "(require :asdf) (push #p\"$(cd ocicl-client; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc ;
+        sbcl --eval "(progn (asdf:load-system :cl-ppcre) (quit))"
+        ls -l ~/.local/bin
+        ls -l ~/.local/share/ocicl/
       shell: bash
     - name: Install ORAS
       run: |
