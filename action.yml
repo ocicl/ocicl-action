@@ -83,7 +83,8 @@ runs:
       id: crane
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        DIGEST=$(crane digest ghcr.io/ocicl/${NAME}:latest
+        DIGEST=$(crane digest ghcr.io/ocicl/${NAME}:latest)
+        echo DIGEST=$DIGEST
         echo "DIGEST=$DIGEST" >> $GITHUB_OUTPUT
       shell: bash
     - name: Sign the published artifact
