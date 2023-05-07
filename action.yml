@@ -31,6 +31,7 @@ runs:
       shell: bash
     - uses: actions/checkout@v3
     - run: |
+        set -x
         grep source README.org;
         if [ $? -eq 0 ]; then
           NAME=$(head -1 README.org | cut -d\  -f2)
@@ -62,7 +63,8 @@ runs:
             echo ================================================================================
             echo ${S}
             echo ================================================================================
-            echo "(require :asdf) (push #p\"$(cd ~/ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SRCDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            SYSTEMDIR=(cd $(dirname $(find . -name ${S}.asd)); pwd)
+            echo "(require :asdf) (push #p\"$(cd ~/ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
             cat ~/.sbclrc
             ~/bin/sbcl ;
           done;
