@@ -86,7 +86,7 @@ runs:
       # against the sigstore community Fulcio instance.
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        cosign sign ghcr.io/ocicl/${NAME}:latest
+        cosign sign --yes ghcr.io/ocicl/${NAME}:latest
       shell: bash
     - run: $HOME/bin/sbcl --version
       shell: bash
