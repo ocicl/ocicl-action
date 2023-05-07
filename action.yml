@@ -75,18 +75,27 @@ runs:
       shell: bash
     - name: Install Cosign
       uses: sigstore/cosign-installer@main
-    - name: Check install!
+    - name: Check install
       run: cosign version
+      shell: bash
+    - uses: imjasonh/setup-crane@v0.3
+    - name: Get the digest
+      id: crane
+      run: |
+        NAME=$(head -1 README.org | cut -d\  -f2) ;
+        DIGEST=$(crane digest ghcr.io/ocicl/${NAME}:latest
+        echo "DIGEST=$DIGEST" >> $GITHUB_OUTPUT
       shell: bash
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       env:
         COSIGN_EXPERIMENTAL: "true"
+        COSIGN_YES: "true"
       # This step uses the identity token to provision an ephemeral certificate
       # against the sigstore community Fulcio instance.
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        cosign sign --yes ghcr.io/ocicl/${NAME}:latest
+        cosign sign --yes ghcr.io/ocicl/${NAME}@${{ steps.crane.outputs.DIGEST }}
       shell: bash
     - run: $HOME/bin/sbcl --version
       shell: bash
