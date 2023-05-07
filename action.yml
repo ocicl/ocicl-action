@@ -73,11 +73,10 @@ runs:
           oras push ghcr.io/ocicl/${NAME}:latest ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
         fi
       shell: bash
-    - name: Install cosign
-      if: github.event_name != 'pull_request'
-      uses: sigstore/cosign-installer@1e95c1de343b5b0c23352d6417ee3e48d5bcd422
-      with:
-        cosign-release: 'v1.4.0'
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@main
+    - name: Check install!
+      run: cosign version
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       env:
