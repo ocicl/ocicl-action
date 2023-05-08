@@ -82,6 +82,7 @@ runs:
       run: |
         echo $GPG_SIGNING_KEY | gpg --batch --import
         echo $GPG_PUBLIC_KEY > pub.key
+      shell: bash
       env:
         GPG_SIGING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
         GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
