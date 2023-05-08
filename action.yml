@@ -4,6 +4,11 @@ description: 'Publish an ocicl artifact'
 runs:
   using: "composite"
   steps:
+    - name: Set up go
+      uses: actions/setup-go@v4
+    - name: Install rekor
+      run: go install -v github.com/sigstore/rekor/cmd/rekor-cli@latest
+      shell: bash
     - name: Install SBCL
       run: |
         curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/2.3.4/sbcl-2.3.4-x86-64-linux-binary.tar.bz2"
@@ -73,30 +78,19 @@ runs:
           oras push ghcr.io/ocicl/${NAME}:latest ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
         fi
       shell: bash
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@main
-    - name: Check install
-      run: cosign version
-      shell: bash
-    - uses: imjasonh/setup-crane@v0.3
-    - name: Get the digest
-      id: crane
+    - name: Import GPG key
       run: |
-        NAME=$(head -1 README.org | cut -d\  -f2) ;
-        DIGEST=$(crane digest ghcr.io/ocicl/${NAME}:latest)
-        echo DIGEST=$DIGEST
-        echo "DIGEST=$DIGEST" >> $GITHUB_OUTPUT
-      shell: bash
+        echo $GPG_KEY | gpg --batch --import
+        echo $GPG_PUB_KEY > pub.key
+      env:
+        GPG_KEY: ${{ secrets.GPG_KEY }}
+        GPG_PUB_KEY: ${{ secrets.GPG_PUB_KEY }}
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
-      env:
-        COSIGN_EXPERIMENTAL: "true"
-        COSIGN_YES: "true"
-      # This step uses the identity token to provision an ephemeral certificate
-      # against the sigstore community Fulcio instance.
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        cosign sign --yes ghcr.io/ocicl/${NAME}@${{ steps.crane.outputs.DIGEST }}
+        gpg --armor -u "ocicl hackers" --output ${NAME}-${VERSION}.tar.gz.sig --detach-sig ${NAME}-${VERSION}.tar.gz
+        rekor-cli upload --signature ${NAME}-${VERSION}.tar.gz.sig --public-key pub.key --artifact ${NAME}-${VERSION}.tar.gz
       shell: bash
     - run: $HOME/bin/sbcl --version
       shell: bash
