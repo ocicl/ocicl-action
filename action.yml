@@ -80,11 +80,11 @@ runs:
       shell: bash
     - name: Import GPG key
       run: |
-        echo $GPG_KEY | gpg --batch --import
-        echo $GPG_PUB_KEY > pub.key
+        echo $GPG_SIGNING_KEY | gpg --batch --import
+        echo $GPG_PUBLIC_KEY > pub.key
       env:
-        GPG_KEY: ${{ secrets.GPG_KEY }}
-        GPG_PUB_KEY: ${{ secrets.GPG_PUB_KEY }}
+        GPG_SIGING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       run: |
