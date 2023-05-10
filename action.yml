@@ -95,8 +95,10 @@ runs:
       if: ${{ github.event_name != 'pull_request' }}
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        gpg --armor -u "ocicl hackers" --output ${NAME}-*.tar.gz.sig --detach-sig src/${NAME}-*.tar.gz
-        rekor-cli upload --signature ${NAME}-*.tar.gz.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
+        FILE=$(cd src; ls ${NAME}-*.tar.gz)
+        gpg --armor -u "ocicl hackers" --output $(FILE).sig --detach-sig src/${NAME}-*.tar.gz
+        oras push ghcr.io/ocicl/${NAME}.sig:latest $(FILE).sig:application/vnd.uknown/layer.v1+gzip
+        rekor-cli upload --signature $(FILE).sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
       shell: bash
     - run: $HOME/bin/sbcl --version
       shell: bash
