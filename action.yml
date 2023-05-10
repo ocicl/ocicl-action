@@ -1,6 +1,11 @@
 # action.yml
 name: 'ocicl'
 description: 'Publish an ocicl artifact'
+inputs:
+  gpg_signing_key:
+    required: true
+  gpg_public_key:
+    required: true
 runs:
   using: "composite"
   steps:
@@ -84,8 +89,8 @@ runs:
         echo $GPG_PUBLIC_KEY > pub.key
       shell: bash
       env:
-        GPG_SIGING_KEY: '${{ secrets.GPG_SIGNING_KEY }}'
-        GPG_PUBLIC_KEY: '${{ secrets.GPG_PUBLIC_KEY }}'
+        GPG_SIGING_KEY: '${{ inputs.gpg_siging_key }}'
+        GPG_PUBLIC_KEY: '${{ inputs.gpg_public_key }}'
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       run: |
