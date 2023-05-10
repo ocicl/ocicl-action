@@ -96,7 +96,7 @@ runs:
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
         gpg --armor -u "ocicl hackers" --output ${NAME}-*.tar.gz.sig --detach-sig src/${NAME}-*.tar.gz
-        rekor-cli upload --signature ${NAME}-*.tar.gz.sig --public-key pub.key --artifact ${NAME}-*.tar.gz
+        rekor-cli upload --signature ${NAME}-*.tar.gz.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
       shell: bash
     - run: $HOME/bin/sbcl --version
       shell: bash
