@@ -89,7 +89,7 @@ runs:
         echo $GPG_PUBLIC_KEY > pub.key
       shell: bash
       env:
-        GPG_SIGING_KEY: '${{ inputs.gpg_siging_key }}'
+        GPG_SIGNING_KEY: '${{ inputs.gpg_siging_key }}'
         GPG_PUBLIC_KEY: '${{ inputs.gpg_public_key }}'
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
