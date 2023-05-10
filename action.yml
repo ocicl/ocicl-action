@@ -58,12 +58,12 @@ runs:
                  git reset --hard ${COMMIT} ;
                  rm -rf .git* ;
                  cd .. ;
-                 tar cvfz ../${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
+                 tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
                  ;;
             file) VERSION=$(grep version ../README.org | awk '{ print $4 }') ;
-                  curl -L -o ../${NAME}-${VERSION}.tar.gz ${URI} ;
-                  tar xvf ../${NAME}-${VERSION}.tar.gz
-                  SRCDIR=$(ls -1)
+                  curl -L -o ${NAME}-${VERSION}.tar.gz ${URI} ;
+                  tar xvf ${NAME}-${VERSION}.tar.gz
+                  SRCDIR=$(ls -1 | grep -v .tar.gz)
                   ;;
             *) echo Unrecognized PROTOCOL ${PROTOCOL} ;
                exit 1 ;
@@ -80,7 +80,7 @@ runs:
           done;
           set -x
           echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-          oras push ghcr.io/ocicl/${NAME}:latest ../${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          oras push ghcr.io/ocicl/${NAME}:latest ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
         fi
       shell: bash
     - name: Import GPG key
@@ -95,7 +95,7 @@ runs:
       if: ${{ github.event_name != 'pull_request' }}
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
-        gpg --armor -u "ocicl hackers" --output ${NAME}-*.tar.gz.sig --detach-sig ${NAME}-*.tar.gz
+        gpg --armor -u "ocicl hackers" --output ${NAME}-*.tar.gz.sig --detach-sig src/${NAME}-*.tar.gz
         rekor-cli upload --signature ${NAME}-*.tar.gz.sig --public-key pub.key --artifact ${NAME}-*.tar.gz
       shell: bash
     - run: $HOME/bin/sbcl --version
