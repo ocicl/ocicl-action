@@ -55,6 +55,7 @@ runs:
                  VERSION=$(date +%Y%m%d)-$(grep commit ../README.org | awk '{ print $4 }') ;
                  SRCDIR=$(ls) ;
                  cd ${SRCDIR} ;
+                 echo ${VERSION} > _00_OCICL_VERSION
                  git reset --hard ${COMMIT} ;
                  rm -rf .git* ;
                  cd .. ;
@@ -64,6 +65,9 @@ runs:
                   curl -L -o ${NAME}-${VERSION}.tar.gz ${URI} ;
                   tar xvf ${NAME}-${VERSION}.tar.gz
                   SRCDIR=$(ls -1 | grep -v .tar.gz)
+                  echo ${VERSION} > _00_OCICL_VERSION
+                  rm ${NAME}-${VERSION}.tar.gz
+                  tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
                   ;;
             *) echo Unrecognized PROTOCOL ${PROTOCOL} ;
                exit 1 ;
@@ -82,6 +86,7 @@ runs:
           echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           oras push ghcr.io/ocicl/${NAME}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
           oras tag ghcr.io/ocicl/${NAME}:${VERSION} latest
+          echo ${VERSION} > ~/_00_OCICL_VERSION
         fi
       shell: bash
     - name: Import GPG key
@@ -100,6 +105,7 @@ runs:
         gpg -k
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
         oras push ghcr.io/ocicl/${NAME}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+        oras tag ghcr.io/ocicl/${NAME}.sig:latest $(cat ~/_00_OCICL_VERSION)
         rekor-cli upload --signature ${FILE}.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
       shell: bash
     - run: $HOME/bin/sbcl --version
