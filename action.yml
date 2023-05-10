@@ -80,7 +80,8 @@ runs:
           done;
           set -x
           echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-          oras push ghcr.io/ocicl/${NAME}:latest ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          oras push ghcr.io/ocicl/${NAME}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          oras tag ghcr.io/ocicl/${NAME}:${VERSION} latest
         fi
       shell: bash
     - name: Import GPG key
