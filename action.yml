@@ -96,6 +96,7 @@ runs:
       run: |
         NAME=$(head -1 README.org | cut -d\  -f2) ;
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
+        gpg -k
         gpg --armor -u "ocicl hackers" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
         oras push ghcr.io/ocicl/${NAME}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
         rekor-cli upload --signature ${FILE}.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
