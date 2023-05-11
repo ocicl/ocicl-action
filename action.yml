@@ -68,7 +68,8 @@ runs:
                   tar xvf source.tar.gz
                   rm source.tar.gz
                   SRCDIR=$(ls) ;
-                  mv ${SRCDIR} ${NAME}-${VERSION} ;
+                  mv ${SRCDIR} tmpname
+                  mv tmpname ${NAME}-${VERSION} ;
                   SRCDIR=$(ls) ;
                   echo ${VERSION} > _00_OCICL_VERSION
                   rm ${NAME}-${VERSION}.tar.gz
