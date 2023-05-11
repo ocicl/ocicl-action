@@ -54,7 +54,7 @@ runs:
             git) git clone ${URI} ;
                  VERSION=$(date +%Y%m%d)-$(grep commit ../README.org | awk '{ print $4 }') ;
                  SRCDIR=$(ls) ;
-                 mv ${SRCDIR} ${SRCDIR}-${VERSION} ;
+                 mv ${SRCDIR} ${NAME}-${VERSION} ;
                  SRCDIR=$(ls) ;
                  cd ${SRCDIR} ;
                  echo ${VERSION} > _00_OCICL_VERSION
@@ -68,7 +68,7 @@ runs:
                   tar xvf source.tar.gz
                   rm source.tar.gz
                   SRCDIR=$(ls) ;
-                  mv ${SRCDIR} ${SRCDIR}-${VERSION} ;
+                  mv ${SRCDIR} ${NAME}-${VERSION} ;
                   SRCDIR=$(ls) ;
                   echo ${VERSION} > _00_OCICL_VERSION
                   rm ${NAME}-${VERSION}.tar.gz
