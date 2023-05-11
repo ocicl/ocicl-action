@@ -72,7 +72,6 @@ runs:
                   mv tmpname ${NAME}-${VERSION} ;
                   SRCDIR=$(ls) ;
                   echo ${VERSION} > _00_OCICL_VERSION
-                  rm ${NAME}-${VERSION}.tar.gz
                   tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
                   ;;
             *) echo Unrecognized PROTOCOL ${PROTOCOL} ;
