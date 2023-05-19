@@ -44,14 +44,14 @@ runs:
         grep "| source" README.org;
         if [ $? -eq 0 ]; then
           NAME=$(head -1 README.org | cut -d\  -f2) ;
-          PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
-          URI=$(grep source README.org | awk '{ print $4 }' | cut -d: -f2-) ;
-          SYSTEMS=$(grep systems README.org | cut -f3 -d \|) ;
+          PROTOCOL=$(grep "| source" README.org | awk '{ print $4 }' | cut -d: -f1) ;
+          URI=$(grep "| source" README.org | awk '{ print $4 }' | cut -d: -f2-) ;
+          SYSTEMS=$(grep "| systems" README.org | cut -f3 -d \|) ;
           mkdir src
           cd src
           case ${PROTOCOL} in
             git) git clone ${URI} ;
-                 VERSION=$(date +%Y%m%d)-$(grep commit ../README.org | awk '{ print $4 }') ;
+                 VERSION=$(date +%Y%m%d)-$(grep "| commit" ../README.org | awk '{ print $4 }') ;
                  SRCDIR=$(ls) ;
                  mv ${SRCDIR} ${NAME}-${VERSION} ;
                  SRCDIR=$(ls) ;
@@ -62,7 +62,7 @@ runs:
                  cd .. ;
                  tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
                  ;;
-            file) VERSION=$(grep version ../README.org | awk '{ print $4 }') ;
+            file) VERSION=$(grep "| version" ../README.org | awk '{ print $4 }') ;
                   curl -L -o source.tar.gz ${URI} ;
                   tar xvf source.tar.gz
                   rm source.tar.gz
