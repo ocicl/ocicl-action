@@ -41,7 +41,7 @@ runs:
     - uses: actions/checkout@v3
     - run: |
         set -x
-        grep source README.org;
+        grep "| source" README.org;
         if [ $? -eq 0 ]; then
           NAME=$(head -1 README.org | cut -d\  -f2) ;
           PROTOCOL=$(grep source README.org | awk '{ print $4 }' | cut -d: -f1) ;
