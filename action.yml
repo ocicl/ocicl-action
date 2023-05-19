@@ -23,10 +23,10 @@ runs:
         cd ..
         rm -rf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 sbcl-2.3.4-x86-64-linux
       shell: bash
-    - name: Install the ocicl client
+    - name: Install ocicl
       run: |
         set -x
-        (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl-client.git;  echo "(require :asdf) (push #p\"$(cd ~/ocicl-client; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc );
+        (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version;  echo "(require :asdf) (push #p\"$(cd ~/ocicl; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc );
         ~/bin/sbcl --non-interactive --eval "(quit)"
       shell: bash
     - name: Install ORAS
