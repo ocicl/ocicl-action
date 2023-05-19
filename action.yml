@@ -74,9 +74,9 @@ runs:
             echo ${S}
             echo ================================================================================ ;
             SYSTEMDIR=$(cd $(dirname $(find . -name ${S}.asd | head -1)) && pwd)
-            echo "(require :asdf) (push #p\"$(cd ~/ocicl-client; pwd)/\" asdf:*central-registry*) (push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\") (asdf:load-system \"${S}\") (quit)" > ~/.sbclrc ;
+            echo "(push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" >> ~/.sbclrc ;
             cat ~/.sbclrc
-            ~/bin/sbcl ;
+            ~/bin/sbcl --non-interactive;
           done;
           set -x
           echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
