@@ -26,6 +26,7 @@ runs:
     - name: Install ocicl
       run: |
         set -x
+        export PATH=~/bin:$PATH
         (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version;  echo "(require :asdf) (push #p\"$(cd ~/ocicl; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc );
         ~/bin/sbcl --non-interactive --eval "(quit)"
       shell: bash
