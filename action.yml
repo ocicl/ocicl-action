@@ -27,17 +27,8 @@ runs:
       run: |
         set -x
         export PATH=~/bin:$PATH
-        (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version;  echo "(require :asdf) (push #p\"$(cd ~/ocicl; pwd)/\" asdf:*central-registry*) (asdf:load-system \"ocicl\")" > ~/.sbclrc );
+        (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version; ocicl setup > ~/.sbclrc)
         ~/bin/sbcl --non-interactive --eval "(quit)"
-      shell: bash
-    - name: Install ORAS
-      run: |
-        ORAS_VERSION="1.0.0"
-        curl -LO "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz"
-        mkdir -p oras-install/
-        tar -zxf oras_${ORAS_VERSION}_*.tar.gz -C oras-install/
-        sudo mv oras-install/oras /usr/local/bin/
-        rm -rf oras_${ORAS_VERSION}_*.tar.gz oras-install/
       shell: bash
     - uses: actions/checkout@v3
     - run: |
