@@ -28,6 +28,7 @@ runs:
         set -x
         export PATH=~/bin:$PATH
         (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version; ocicl setup > ~/.sbclrc)
+        echo "(setf ocicl-runtime:*verbose* t)" >> ~/.sbclrc
         ~/bin/sbcl --non-interactive --eval "(quit)"
       shell: bash
     - uses: actions/checkout@v3
@@ -69,21 +70,23 @@ runs:
                exit 1 ;
                ;;
           esac ;
+          mv ~/.sbclrc ~/.sbclrc-clean
           for S in ${SYSTEMS}; do
             echo ================================================================================
             echo ${S}
             echo ================================================================================ ;
             SYSTEMDIR=$(cd $(dirname $(find . -name ${S}.asd | head -1)) && pwd)
+            cp ~/.sbclrc-clean ~/.sbclrc
             echo "(push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" >> ~/.sbclrc ;
             cat ~/.sbclrc
             ~/bin/sbcl --non-interactive;
           done;
           set -x
-          echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
           for S in ${SYSTEMS}; do
             S=$(echo ${S} | sed 's/+/_plus_/g')
-            oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
-            oras tag ghcr.io/ocicl/${S}:${VERSION} latest
+            ocicl-oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+            ocicl-oras tag ghcr.io/ocicl/${S}:${VERSION} latest
           done
           echo ${VERSION} > ~/_00_OCICL_VERSION
           echo ${SYSTEMS} > ~/SYSTEMS
@@ -106,8 +109,8 @@ runs:
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
         for S in $(cat ~/SYSTEMS); do
           S=$(echo ${S} | sed 's/+/_plus_/g')
-          oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
-          oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
+          ocicl-oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+          ocicl-oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
         rekor-cli upload --signature ${FILE}.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
       shell: bash
