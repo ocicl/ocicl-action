@@ -11,8 +11,8 @@ runs:
   steps:
     - name: Set up go
       uses: actions/setup-go@v4
-    - name: Install libffi
-      run: sudo apt-get update && sudo apt-get install -y libffi-dev
+    - name: Install some native libraries
+      run: sudo apt-get update && sudo apt-get install -y libffi-dev libclblas-dev
       shell: bash
     - name: Install rekor
       run: go install -v github.com/sigstore/rekor/cmd/rekor-cli@latest
