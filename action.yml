@@ -36,7 +36,6 @@ runs:
       shell: bash
     - uses: actions/checkout@v3
     - run: |
-        set -x
         grep "| source" README.org;
         if [ $? -eq 0 ]; then
           NAME=$(head -1 README.org | cut -d\  -f2) ;
@@ -73,18 +72,20 @@ runs:
                exit 1 ;
                ;;
           esac ;
-          mv ~/.sbclrc ~/.sbclrc-clean
+          # Push all of the system paths into asdf's *central-registry*.
+          for S in ${SYSTEMS}; do
+            SYSTEMDIR=$(cd $(dirname $(find . -name ${S}.asd | head -1)) && pwd)
+            echo "(push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) " >> ~/.sbclrc ;
+          done;
+          echo ==== .sbclrc ===================================================================
+          cat ~/.sbclrc
+          # Build each system
           for S in ${SYSTEMS}; do
             echo ================================================================================
-            echo ${S}
+            echo Building ${S}
             echo ================================================================================ ;
-            SYSTEMDIR=$(cd $(dirname $(find . -name ${S}.asd | head -1)) && pwd)
-            cp ~/.sbclrc-clean ~/.sbclrc
-            echo "(push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) (asdf:load-system \"${S}\") (quit)" >> ~/.sbclrc ;
-            cat ~/.sbclrc
-            ~/bin/sbcl --non-interactive;
+            ~/bin/sbcl --non-interactive --eval "(progn (asdf:load-system \"${S}\") (quit))";
           done;
-          set -x
           echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
           for S in ${SYSTEMS}; do
             S=$(echo ${S} | sed 's/+/_plus_/g')
