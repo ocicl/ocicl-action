@@ -86,6 +86,7 @@ runs:
             echo ================================================================================ ;
             ~/bin/sbcl --non-interactive --eval "(progn (asdf:load-system \"${S}\") (quit))";
           done;
+          set -x
           echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
           for S in ${SYSTEMS}; do
             S=$(echo ${S} | sed 's/+/_plus_/g')
