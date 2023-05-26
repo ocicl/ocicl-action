@@ -108,6 +108,7 @@ runs:
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       run: |
+        set -x
         NAME=$(head -1 README.org | cut -d\  -f2) ;
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
