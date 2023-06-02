@@ -11,10 +11,7 @@ runs:
   steps:
     - name: Run
       shell: bash
-      run: >
-        sudo podman run --rm --privileged --tty --interactive
-        --volume ${{ github.workspace }}:/github/workspace:z
-        ghcr.io/ocicl/ocicl-sandbox:latest
+      run: podman run --rm --tty --interactive  --volume ${{ github.workspace }}:/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
     - uses: actions/checkout@v3
     - run: |
         echo ==== .sbclrc ===================================================================
