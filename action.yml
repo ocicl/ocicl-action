@@ -9,93 +9,33 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up go
-      uses: actions/setup-go@v4
-    - name: Install some native libraries
-      run: sudo apt-get update && sudo apt-get install -y libffi-dev libclblas-dev libuv1-dev libev-dev libglu-dev freeglut3-dev libgl1-mesa-dev libglfw3-dev libunac1-dev libtidy-dev libfixposix-dev
+    - name: Run
       shell: bash
-    - name: Install rekor
-      run: go install -v github.com/sigstore/rekor/cmd/rekor-cli@latest
-      shell: bash
-    - name: Install SBCL
-      run: |
-        curl -L -O "https://downloads.sourceforge.net/project/sbcl/sbcl/2.3.4/sbcl-2.3.4-x86-64-linux-binary.tar.bz2"
-        tar -xf sbcl-2.3.4-x86-64-linux-binary.tar.bz2
-        cd sbcl-2.3.4-x86-64-linux
-        ./install.sh --prefix=$HOME
-        cd ..
-        rm -rf sbcl-2.3.4-x86-64-linux-binary.tar.bz2 sbcl-2.3.4-x86-64-linux
-      shell: bash
-    - name: Install ocicl
-      run: |
-        set -x
-        export PATH=~/bin:$PATH
-        (cd ~; git clone --depth=1 https://github.com/ocicl/ocicl.git; cd ocicl; make; make install; ocicl version; ocicl setup > ~/.sbclrc)
-        echo "(setf ocicl-runtime:*verbose* t)" >> ~/.sbclrc
-        ~/bin/sbcl --non-interactive --eval "(quit)"
-      shell: bash
+      run: >
+        sudo podman run --rm --privileged --tty --interactive
+        --volume ${{ github.workspace }}:/github/workspace:z
+        ghcr.io/ocicl/ocicl-sandbox:latest
     - uses: actions/checkout@v3
     - run: |
-        grep "| source" README.org;
-        if [ $? -eq 0 ]; then
-          NAME=$(head -1 README.org | cut -d\  -f2) ;
-          PROTOCOL=$(grep "| source" README.org | awk '{ print $4 }' | cut -d: -f1) ;
-          URI=$(grep "| source" README.org | awk '{ print $4 }' | cut -d: -f2-) ;
-          SYSTEMS=$(grep "| systems" README.org | cut -f3 -d \|) ;
-          mkdir src
-          cd src
-          case ${PROTOCOL} in
-            git) git clone ${URI} ;
-                 VERSION=$(date +%Y%m%d)-$(grep "| commit" ../README.org | awk '{ print $4 }') ;
-                 SRCDIR=$(ls) ;
-                 mv ${SRCDIR} ${NAME}-${VERSION} ;
-                 SRCDIR=$(ls) ;
-                 cd ${SRCDIR} ;
-                 echo ${VERSION} > _00_OCICL_VERSION
-                 git reset --hard ${COMMIT} ;
-                 rm -rf .git* ;
-                 cd .. ;
-                 tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
-                 ;;
-            file) VERSION=$(grep "| version" ../README.org | awk '{ print $4 }') ;
-                  curl -L -o source.tar.gz ${URI} ;
-                  tar xvf source.tar.gz
-                  rm source.tar.gz
-                  SRCDIR=$(ls) ;
-                  mv ${SRCDIR} tmpname
-                  mv tmpname ${NAME}-${VERSION} ;
-                  SRCDIR=$(ls) ;
-                  echo ${VERSION} > _00_OCICL_VERSION
-                  tar cvfz ${NAME}-${VERSION}.tar.gz ${SRCDIR} ;
-                  ;;
-            *) echo Unrecognized PROTOCOL ${PROTOCOL} ;
-               exit 1 ;
-               ;;
-          esac ;
-          # Push all of the system paths into asdf's *central-registry*.
-          for S in ${SYSTEMS}; do
-            SYSTEMDIR=$(cd $(dirname $(find . -name ${S}.asd | head -1)) && pwd)
-            echo "(push #p\"$(cd ${SYSTEMDIR}; pwd)/\" asdf:*central-registry*) " >> ~/.sbclrc ;
-          done;
-          echo ==== .sbclrc ===================================================================
-          cat ~/.sbclrc
-          # Build each system
-          for S in ${SYSTEMS}; do
-            echo ================================================================================
-            echo Building ${S}
-            echo ================================================================================ ;
-            ~/bin/sbcl --non-interactive --eval "(progn (asdf:load-system \"${S}\") (quit))";
-          done;
-          set -x
-          echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
-          for S in ${SYSTEMS}; do
-            S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
-            ocicl-oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
-            ocicl-oras tag ghcr.io/ocicl/${S}:${VERSION} latest
-          done
-          echo ${VERSION} > ~/_00_OCICL_VERSION
-          echo ${SYSTEMS} > ~/SYSTEMS
-        fi
+        echo ==== .sbclrc ===================================================================
+        cat ~/.sbclrc
+        # Build each system
+        for S in ${SYSTEMS}; do
+          echo ================================================================================
+          echo Building ${S}
+          echo ================================================================================ ;
+          ~/bin/sbcl --non-interactive --eval "(progn (asdf:load-system \"${S}\") (quit))";
+        done;
+        set -x
+        echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        for S in ${SYSTEMS}; do
+          S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
+          ocicl-oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          ocicl-oras tag ghcr.io/ocicl/${S}:${VERSION} latest
+        done
+        echo ${VERSION} > ~/_00_OCICL_VERSION
+        echo ${SYSTEMS} > ~/SYSTEMS
+      fi
       shell: bash
     - name: Import GPG key
       run: |
