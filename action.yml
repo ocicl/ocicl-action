@@ -15,11 +15,11 @@ runs:
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
     - run: |
         set -x
-        echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
-          ocicl-oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
-          ocicl-oras tag ghcr.io/ocicl/${S}:${VERSION} latest
+          oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          oras tag ghcr.io/ocicl/${S}:${VERSION} latest
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
         echo ${SYSTEMS} > ~/SYSTEMS
@@ -42,8 +42,8 @@ runs:
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
         for S in $(cat ~/SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
-          ocicl-oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
-          ocicl-oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
+          oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+          oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
         rekor-cli upload --signature ${FILE}.sig --public-key pub.key --artifact src/${NAME}-*.tar.gz
       shell: bash
