@@ -9,20 +9,17 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v3
+    - name: Show things
+      shell: bash
+      run: |
+        pwd
+        ls -l
+        ls -l /github/workspace
     - name: Run
       shell: bash
       run: podman run --rm --tty --interactive  --volume ${{ github.workspace }}:/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
-    - uses: actions/checkout@v3
     - run: |
-        echo ==== .sbclrc ===================================================================
-        cat ~/.sbclrc
-        # Build each system
-        for S in ${SYSTEMS}; do
-          echo ================================================================================
-          echo Building ${S}
-          echo ================================================================================ ;
-          ~/bin/sbcl --non-interactive --eval "(progn (asdf:load-system \"${S}\") (quit))";
-        done;
         set -x
         echo ${{ github.token }} | ocicl-oras login ghcr.io -u ${{ github.actor }} --password-stdin
         for S in ${SYSTEMS}; do
