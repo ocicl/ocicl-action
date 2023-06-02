@@ -45,5 +45,6 @@ runs:
           oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
           oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
-        podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/src/${NAME}-*.tar.gz
+        TARBALL=$(ls src/${NAME}-*.tar.gz)
+        podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
       shell: bash
