@@ -32,7 +32,6 @@ runs:
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
         echo ${SYSTEMS} > ~/SYSTEMS
-      fi
       shell: bash
     - name: Import GPG key
       run: |
