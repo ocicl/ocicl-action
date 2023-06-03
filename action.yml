@@ -18,6 +18,7 @@ runs:
         echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
         pwd
         ls -l
+        NAME=$(cat NAME)
         SYSTEMS=$(cat SYSTEMS)
         VERSION=$(cat VERSION)
         for S in ${SYSTEMS}; do
@@ -39,7 +40,7 @@ runs:
       if: ${{ github.event_name != 'pull_request' }}
       run: |
         set -x
-        NAME=$(head -1 README.org | cut -d\  -f2) ;
+        NAME=$(cat NAME)
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
