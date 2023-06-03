@@ -16,13 +16,16 @@ runs:
     - run: |
         set -x
         echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        pwd
+        ls -l
+        SYSTEMS=$(cat SYSTEMS)
+        VERSION=$(cat VERSION)
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
           oras tag ghcr.io/ocicl/${S}:${VERSION} latest
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
-        echo ${SYSTEMS} > ~/SYSTEMS
       shell: bash
     - name: Import GPG key
       run: |
@@ -40,7 +43,7 @@ runs:
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
-        for S in $(cat ~/SYSTEMS); do
+        for S in $(cat SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
           oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
