@@ -15,12 +15,13 @@ runs:
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
     - run: |
         set -x
-        echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        pwd
-        ls -l
         NAME=$(cat NAME)
         SYSTEMS=$(cat SYSTEMS)
         VERSION=$(cat VERSION)
+        cd src
+        echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        pwd
+        ls -l
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
