@@ -40,6 +40,23 @@ runs:
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
       run: |
+        retry_command() {
+          local -r cmd="$@"
+          local -i attempt=0
+          local -i max_attempts=5
+          local -i sleep_time=1  # Initial backoff delay in seconds
+
+          until $cmd; do
+              attempt+=1
+              if (( attempt > max_attempts )); then
+                  echo "The command has failed after $max_attempts attempts."
+                  return 1
+              fi
+              echo "The command has failed. Retrying in $sleep_time seconds..."
+              sleep $sleep_time
+              sleep_time*=2  # Double the backoff delay each time
+          done
+        }
         set -x
         NAME=$(cat NAME)
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
@@ -47,9 +64,9 @@ runs:
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sig --detach-sig src/${NAME}-*.tar.gz
         for S in $(cat SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
-          oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
-          oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
+          retry_command oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+          retry_command oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
         TARBALL=$(ls src/${NAME}-*.tar.gz)
-        podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
+        retry_command podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
       shell: bash
