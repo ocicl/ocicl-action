@@ -54,7 +54,7 @@ runs:
               fi
               echo "The command has failed. Retrying in $sleep_time seconds..."
               sleep $sleep_time
-              sleep_time*=2  # Double the backoff delay each time
+              sleep_time=$((sleep_time * 2))  # Double the backoff delay each time
           done
         }
         set -x
