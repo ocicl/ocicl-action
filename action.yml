@@ -15,6 +15,23 @@ runs:
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
     - run: |
         set -x
+        retry_command0() {
+          local -r cmd="$@"
+          local -i attempt=0
+          local -i max_attempts=5
+          local -i sleep_time=1  # Initial backoff delay in seconds
+
+          until $cmd; do
+              attempt+=1
+              if (( attempt > max_attempts )); then
+                  echo "The command has failed after $max_attempts attempts."
+                  return 1
+              fi
+              echo "The command has failed. Retrying in $sleep_time seconds..."
+              sleep $sleep_time
+              sleep_time=$((sleep_time * 2))  # Double the backoff delay each time
+          done
+        }
         NAME=$(cat NAME)
         SYSTEMS=$(cat SYSTEMS)
         VERSION=$(cat VERSION)
@@ -24,8 +41,8 @@ runs:
         ls -l
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
-          oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
-          oras tag ghcr.io/ocicl/${S}:${VERSION} latest
+          retry_command0 oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          retry_command0 oras tag ghcr.io/ocicl/${S}:${VERSION} latest
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
       shell: bash
