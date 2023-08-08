@@ -37,7 +37,7 @@ runs:
         VERSION=$(cat VERSION)
         cd src
         echo ${{ github.token }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        echo ${{ DOCKERHUB_PASSWORD }} | oras login docker.io -u ocicl --password-stdin
+        echo $DOCKERHUB_PASSWORD | oras login docker.io -u ocicl --password-stdin
         pwd
         ls -l
         for S in ${SYSTEMS}; do
