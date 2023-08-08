@@ -49,6 +49,8 @@ runs:
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
       shell: bash
+      env:
+        DOCKERHUB_PASSWORD: '${{ inputs.dockerhub_password }}'
     - name: Import GPG key
       run: |
         echo $GPG_SIGNING_KEY | base64 -d | gpg --batch --import
