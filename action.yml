@@ -4,7 +4,7 @@ description: 'Publish an ocicl artifact'
 inputs:
   gpg_signing_key:
     required: true
-  gpg_signing_key:
+  gpg_public_key:
     required: true
   dockerhub_password:
     required: true
