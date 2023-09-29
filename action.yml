@@ -15,7 +15,6 @@ runs:
     - name: Run
       shell: bash
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
-      timeout-minutes: 10
     - run: |
         set -x
         retry_command0() {
