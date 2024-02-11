@@ -44,6 +44,7 @@ runs:
         ls -l
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
+          S=$(echo ${S} | sed 's/\//_slash_/g')
           retry_command0 oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
           retry_command0 oras tag ghcr.io/ocicl/${S}:${VERSION} latest
           retry_command0 oras push docker.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
