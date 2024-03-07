@@ -11,7 +11,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Run
       shell: bash
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
