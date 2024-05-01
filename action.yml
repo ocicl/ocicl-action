@@ -12,6 +12,9 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
+    - uses: shogo82148/actions-setup-redis@v1
+      with:
+        redis-version: "7.x"
     - name: Run
       shell: bash
       run: podman run --rm --tty --interactive  --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
