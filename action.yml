@@ -109,7 +109,7 @@ runs:
         ls -l
         echo "-----------------------------------"
         if test -f ./changes.txt; then
-          mv /github/workspace/changes.txt ${NAME}-$(cat ~/_00_OCICL_VERSION)-changes.txt
+          mv ./changes.txt ${NAME}-$(cat ~/_00_OCICL_VERSION)-changes.txt
           for S in $(cat SYSTEMS); do
             S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
             S=$(echo ${S} | sed 's/\//_slash_/g')
