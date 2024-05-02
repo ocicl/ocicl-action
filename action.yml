@@ -8,7 +8,7 @@ inputs:
     required: true
   dockerhub_password:
     required: true
-  openai_api_key:
+  llm_api_key:
     required: true
 runs:
   using: "composite"
@@ -66,6 +66,8 @@ runs:
         GPG_PUBLIC_KEY: '${{ inputs.gpg_public_key }}'
     - name: Sign the published artifact
       if: ${{ github.event_name != 'pull_request' }}
+      env:
+        LLM_API_KEY: '${{ inputs.llm_api_key }}'
       run: |
         retry_command() {
           local -r cmd="$@"
@@ -101,7 +103,7 @@ runs:
         retry_command podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
 
         # Generate the change description
-        retry_command podman run --rm --tty --interactive -e OPENAI_API_KEY=$OPENAI_API_KEY --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest make-compare.sh
+        retry_command podman run --rm --tty --interactive -e LLM_API_KEY=$LLM_API_KEY --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest make-compare.sh
         if test -f changes.txt; then
           mv changes.txt ${NAME}-$(cat ~/_00_OCICL_VERSION)-changes.txt
           for S in $(cat SYSTEMS); do
