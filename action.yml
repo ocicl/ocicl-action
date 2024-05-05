@@ -53,6 +53,7 @@ runs:
           retry_command0 oras tag docker.io/ocicl/${S}:${VERSION} latest
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
+        echo ${NAME} > ~/_00_OCICL_NAME
       shell: bash
       env:
         DOCKERHUB_PASSWORD: '${{ inputs.dockerhub_password }}'
