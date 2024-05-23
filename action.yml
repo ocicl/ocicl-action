@@ -101,7 +101,7 @@ runs:
           retry_command oras tag docker.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
         TARBALL=$(ls src/${NAME}-*.tar.gz)
-        retry_command podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --timeout 60 --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
+        retry_command podman run --rm --tty --interactive --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --timeout 120s --signature /github/workspace/${FILE}.sig --public-key /github/workspace/pub.key --artifact /github/workspace/${TARBALL}
 
         # Generate the change description
         retry_command podman run --rm --tty --interactive -e LLM_API_KEY=$LLM_API_KEY --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest make-compare.sh
