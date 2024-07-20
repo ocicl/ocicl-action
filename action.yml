@@ -47,9 +47,9 @@ runs:
         for S in ${SYSTEMS}; do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           S=$(echo ${S} | sed 's/\//_slash_/g')
-          retry_command0 oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          retry_command0 oras push ghcr.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.ocicl.lisp-system.tgz
           retry_command0 oras tag ghcr.io/ocicl/${S}:${VERSION} latest
-          retry_command0 oras push docker.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.uknown/layer.v1+gzip
+          retry_command0 oras push docker.io/ocicl/${S}:${VERSION} ${NAME}-${VERSION}.tar.gz:application/vnd.ocicl.lisp-system.tgz
           retry_command0 oras tag docker.io/ocicl/${S}:${VERSION} latest
         done
         echo ${VERSION} > ~/_00_OCICL_VERSION
@@ -95,9 +95,9 @@ runs:
         for S in $(cat SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           S=$(echo ${S} | sed 's/\//_slash_/g')
-          retry_command oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+          retry_command oras push ghcr.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.ocicl.lisp-system.sig
           retry_command oras tag ghcr.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
-          retry_command oras push docker.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.uknown/layer.v1+gzip
+          retry_command oras push docker.io/ocicl/${S}.sig:latest ${FILE}.sig:application/vnd.ocicl.lisp-system.sig
           retry_command oras tag docker.io/ocicl/${S}.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
         TARBALL=$(ls src/${NAME}-*.tar.gz)
@@ -114,8 +114,8 @@ runs:
           for S in $(cat SYSTEMS); do
             S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
             S=$(echo ${S} | sed 's/\//_slash_/g')
-            retry_command oras push ghcr.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.uknown/layer.v1+gzip
-            retry_command oras push docker.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.uknown/layer.v1+gzip
+            retry_command oras push ghcr.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.ocicl.lisp-system.changes.txt
+            retry_command oras push docker.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.ocicl.lisp-system.changes.txt
           done
         fi
       shell: bash
