@@ -91,7 +91,7 @@ runs:
         NAME=$(cat NAME)
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
-        sha256sum src/${NAME}-*.tar.gz > tarball.sha256sum
+        (cd src; sha256sum ${NAME}-*.tar.gz > ../tarball.sha256sum)
         gpg --armor -u "ocicl-tarball-signer" --output ${FILE}.sha256sum.sig --detach-sig tarball.sha256sum
         for S in $(cat SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
