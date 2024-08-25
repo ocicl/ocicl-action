@@ -101,7 +101,7 @@ runs:
           retry_command oras push docker.io/ocicl/${S}.sha256sum.sig:latest ${FILE}.sha256sum.sig:application/vnd.ocicl.lisp-system.sig
           retry_command oras tag docker.io/ocicl/${S}.sha256sum.sig:latest $(cat ~/_00_OCICL_VERSION)
         done
-        retry_command podman run --rm --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --timeout 240s --signature /github/workspace/${FILE}.sga256sum.sig --public-key /github/workspace/pub.key --artifact /github/workspace/tarball.sha256sum
+        retry_command podman run --rm --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest rekor-cli upload --timeout 240s --signature /github/workspace/${FILE}.sha256sum.sig --public-key /github/workspace/pub.key --artifact /github/workspace/tarball.sha256sum
 
         # Generate the change description
         retry_command podman run --rm -e LLM_API_KEY=$LLM_API_KEY --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest make-compare.sh
