@@ -13,6 +13,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: oras-project/setup-oras@v1
+    - run: oras version
     - uses: actions/checkout@v4
     - name: Run
       shell: bash
@@ -88,6 +90,7 @@ runs:
           done
         }
         set -x
+        NOTE="--annotation \"org.opencontainers.image.source=https://github.com/ocicl/REPO=\""
         NAME=$(cat NAME)
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
