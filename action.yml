@@ -17,6 +17,16 @@ runs:
     - shell: bash
       run: oras version
     - uses: actions/checkout@v4
+    - shell: bash
+      run: rm -rf */.qlot
+    - uses: actions/cache@v4
+      with:
+        path:
+          ocicl
+          ~/.cache/common-lisp
+        key: ${{ runner.os }}-ocicl
+        restore-keys: |
+          ${{ runner.os }}-ocicl
     - name: Run
       shell: bash
       run: podman run --rm --volume $(pwd):/github/workspace:z ghcr.io/ocicl/ocicl-sandbox:latest
