@@ -1,0 +1,120 @@
+name: 'Update README Version/Hash'
+description: 'Check upstream repo for updates and update commit hash or version in README.org'
+author: 'Anthony Green'
+
+inputs:
+  upstream-repo:
+    description: 'Upstream repository URL (e.g., https://github.com/user/repo.git or https://github.com/user/repo)'
+    required: true
+  readme-path:
+    description: 'Path to README file'
+    required: false
+    default: 'README.org'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check and update
+      shell: bash
+      run: |
+        README="${{ inputs.readme-path }}"
+        UPSTREAM="${{ inputs.upstream-repo }}"
+
+        # Check if upstream is GitHub or SourceHut
+        if ! echo "$UPSTREAM" | grep -qE '(github\.com|git\.sr\.ht)'; then
+          echo "Skipping: Only GitHub and SourceHut are supported"
+          echo "Upstream: $UPSTREAM"
+          exit 0
+        fi
+
+        # Determine if this is git-based or version-based
+        if grep -q '^\| commit' "$README"; then
+          # Git commit mode
+          echo "Mode: Git commit tracking"
+
+          CURRENT_HASH=$(grep -E '^\| commit' "$README" | awk '{print $3}')
+          echo "Current hash: $CURRENT_HASH"
+
+          # Fetch latest commit from upstream repo
+          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD | cut -f1 | cut -c1-7)
+          echo "Latest hash: $LATEST_HASH"
+
+          if [ "$CURRENT_HASH" != "$LATEST_HASH" ]; then
+            echo "Update detected: $CURRENT_HASH -> $LATEST_HASH"
+
+            # Update the hash in README
+            sed -i "s/^\| commit  \| [a-f0-9]\{7\}/| commit  | $LATEST_HASH/" "$README"
+
+            # Commit and push
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add "$README"
+            git commit -m "Update commit hash to $LATEST_HASH"
+            git push
+
+            echo "Updated and pushed changes"
+          else
+            echo "No update needed"
+          fi
+
+        elif grep -q '^\| version' "$README"; then
+          # Version/release mode
+          echo "Mode: Version/release tracking"
+
+          CURRENT_VERSION=$(grep -E '^\| version' "$README" | awk '{print $3}')
+          echo "Current version: $CURRENT_VERSION"
+
+          if echo "$UPSTREAM" | grep -q 'github\.com'; then
+            # GitHub releases
+            REPO=$(echo "$UPSTREAM" | sed 's|.*github.com/||' | sed 's|\.git$||')
+            echo "GitHub repo: $REPO"
+
+            # Fetch latest release tag
+            LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//')
+
+            # If no releases, try tags
+            if [ -z "$LATEST_VERSION" ]; then
+              LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+            fi
+
+          elif echo "$UPSTREAM" | grep -q 'git\.sr\.ht'; then
+            # SourceHut tags
+            echo "SourceHut repo: $UPSTREAM"
+
+            # Fetch latest tag
+            LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+          fi
+
+          echo "Latest version: $LATEST_VERSION"
+
+          if [ -n "$LATEST_VERSION" ] && [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "Update detected: $CURRENT_VERSION -> $LATEST_VERSION"
+
+            # Update version in README
+            sed -i "s/^\| version \| [^ ]*  */| version | $LATEST_VERSION/" "$README"
+
+            # Update source URL if it contains the version (handle various patterns)
+            sed -i "s|release-${CURRENT_VERSION}|release-${LATEST_VERSION}|g" "$README"
+            sed -i "s|/v${CURRENT_VERSION}|/v${LATEST_VERSION}|g" "$README"
+            sed -i "s|/${CURRENT_VERSION}\.tar|/${LATEST_VERSION}.tar|g" "$README"
+
+            # Commit and push
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add "$README"
+            git commit -m "Update version to $LATEST_VERSION"
+            git push
+
+            echo "Updated and pushed changes"
+          else
+            echo "No update needed"
+          fi
+
+        else
+          echo "Error: README does not contain '| commit' or '| version' line"
+          exit 1
+        fi
+
+branding:
+  icon: 'refresh-cw'
+  color: 'blue'
