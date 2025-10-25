@@ -12,14 +12,23 @@ inputs:
     required: false
     default: 'README.org'
 
+outputs:
+  updated:
+    description: 'Whether an update was detected and applied (true/false)'
+    value: ${{ steps.check.outputs.updated }}
+
 runs:
   using: 'composite'
   steps:
     - name: Check and update
+      id: check
       shell: bash
       run: |
         README="${{ inputs.readme-path }}"
         UPSTREAM="${{ inputs.upstream-repo }}"
+
+        # Default to no update
+        echo "updated=false" >> $GITHUB_OUTPUT
 
         # If upstream not provided, extract from README source line
         if [ -z "$UPSTREAM" ]; then
@@ -72,6 +81,7 @@ runs:
             git commit -m "Update commit hash to $LATEST_HASH"
             git push
 
+            echo "updated=true" >> $GITHUB_OUTPUT
             echo "Updated and pushed changes"
           else
             echo "No update needed"
@@ -125,6 +135,7 @@ runs:
             git commit -m "Update version to $LATEST_VERSION"
             git push
 
+            echo "updated=true" >> $GITHUB_OUTPUT
             echo "Updated and pushed changes"
           else
             echo "No update needed"
