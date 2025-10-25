@@ -28,11 +28,11 @@ runs:
         fi
 
         # Determine if this is git-based or version-based
-        if grep -q '^\| commit' "$README"; then
+        if grep -q '^| commit' "$README"; then
           # Git commit mode
           echo "Mode: Git commit tracking"
 
-          CURRENT_HASH=$(grep -E '^\| commit' "$README" | awk '{print $3}')
+          CURRENT_HASH=$(grep -E '^| commit' "$README" | awk '{print $3}')
           echo "Current hash: $CURRENT_HASH"
 
           # Fetch latest commit from upstream repo
@@ -43,7 +43,7 @@ runs:
             echo "Update detected: $CURRENT_HASH -> $LATEST_HASH"
 
             # Update the hash in README
-            sed -i "s/^\| commit  \| [a-f0-9]\{7\}/| commit  | $LATEST_HASH/" "$README"
+            sed -i "s/^| commit  | [a-f0-9]\{7\}/| commit  | $LATEST_HASH/" "$README"
 
             # Commit and push
             git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -57,11 +57,11 @@ runs:
             echo "No update needed"
           fi
 
-        elif grep -q '^\| version' "$README"; then
+        elif grep -q '^| version' "$README"; then
           # Version/release mode
           echo "Mode: Version/release tracking"
 
-          CURRENT_VERSION=$(grep -E '^\| version' "$README" | awk '{print $3}')
+          CURRENT_VERSION=$(grep -E '^| version' "$README" | awk '{print $3}')
           echo "Current version: $CURRENT_VERSION"
 
           if echo "$UPSTREAM" | grep -q 'github\.com'; then
@@ -91,7 +91,7 @@ runs:
             echo "Update detected: $CURRENT_VERSION -> $LATEST_VERSION"
 
             # Update version in README
-            sed -i "s/^\| version \| [^ ]*  */| version | $LATEST_VERSION/" "$README"
+            sed -i "s/^| version | [^ ]*/| version | $LATEST_VERSION/" "$README"
 
             # Update source URL if it contains the version (handle various patterns)
             sed -i "s|release-${CURRENT_VERSION}|release-${LATEST_VERSION}|g" "$README"
