@@ -32,7 +32,7 @@ runs:
           # Git commit mode
           echo "Mode: Git commit tracking"
 
-          CURRENT_HASH=$(grep -E '^| commit  \|' "$README" | awk '{print $3}')
+          CURRENT_HASH=$(grep '^| commit  |' "$README" | awk '{print $3}')
           echo "Current hash: $CURRENT_HASH"
 
           # Fetch latest commit from upstream repo
@@ -61,7 +61,7 @@ runs:
           # Version/release mode
           echo "Mode: Version/release tracking"
 
-          CURRENT_VERSION=$(grep -E '^| version \|' "$README" | awk '{print $3}')
+          CURRENT_VERSION=$(grep '^| version |' "$README" | awk '{print $3}')
           echo "Current version: $CURRENT_VERSION"
 
           if echo "$UPSTREAM" | grep -q 'github\.com'; then
