@@ -4,8 +4,9 @@ author: 'Anthony Green'
 
 inputs:
   upstream-repo:
-    description: 'Upstream repository URL (e.g., https://github.com/user/repo.git or https://github.com/user/repo)'
-    required: true
+    description: 'Upstream repository URL (optional - will be extracted from README source line if not provided)'
+    required: false
+    default: ''
   readme-path:
     description: 'Path to README file'
     required: false
@@ -19,6 +20,25 @@ runs:
       run: |
         README="${{ inputs.readme-path }}"
         UPSTREAM="${{ inputs.upstream-repo }}"
+
+        # If upstream not provided, extract from README source line
+        if [ -z "$UPSTREAM" ]; then
+          SOURCE_URL=$(grep '^| source  |' "$README" | awk '{print $4}' | sed 's/^git://' | sed 's/^file://')
+
+          # Extract repo URL from tarball/archive URLs
+          if echo "$SOURCE_URL" | grep -q '/archive/'; then
+            # GitHub archive URL: extract repo path
+            UPSTREAM=$(echo "$SOURCE_URL" | sed 's|/archive/.*||')
+          elif echo "$SOURCE_URL" | grep -q '\.tar\.gz$\|\.tgz$\|\.zip$'; then
+            # Generic tarball - try to extract repo URL
+            UPSTREAM=$(echo "$SOURCE_URL" | sed 's|/releases/.*||' | sed 's|/archive/.*||')
+          else
+            # Assume it's already a repo URL
+            UPSTREAM="$SOURCE_URL"
+          fi
+
+          echo "Extracted upstream from README: $UPSTREAM"
+        fi
 
         # Check if upstream is GitHub or SourceHut
         if ! echo "$UPSTREAM" | grep -qE '(github\.com|git\.sr\.ht)'; then
