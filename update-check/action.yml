@@ -56,6 +56,12 @@ runs:
           exit 0
         fi
 
+        # Skip mfiano repos (github.com/mfiano has disappeared)
+        if echo "$UPSTREAM" | grep -q 'github\.com/mfiano'; then
+          echo "Skipping: mfiano repos are handled separately"
+          exit 0
+        fi
+
         # Determine if this is git-based or version-based
         if grep -q '^| commit  |' "$README"; then
           # Git commit mode
