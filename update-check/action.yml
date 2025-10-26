@@ -66,11 +66,12 @@ runs:
           fi
 
           local issue_title="Missing upstream repository: $package_name"
-          local issue_body="The upstream repository for '$package_name' appears to be missing or inaccessible.
+          read -r -d '' issue_body <<EOF || true
+The upstream repository for '$package_name' appears to be missing or inaccessible.
 
-**Repository URL:** $repo_url
+Repository URL: $repo_url
 
-**Current README:** $README
+Current README: $README
 
 The repository may have been:
 - Deleted or moved
@@ -80,7 +81,8 @@ The repository may have been:
 Please investigate and either:
 1. Update the source URL in the README if the repository moved
 2. Find an alternative source
-3. Archive this package if no longer maintained"
+3. Archive this package if no longer maintained
+EOF
 
           # Check if issue already exists
           echo "Checking for existing issues about missing repo..."
