@@ -54,6 +54,17 @@ runs:
             package_name=$(basename $(pwd))
           fi
 
+          # Get current repository from GITHUB_REPOSITORY env var or git remote
+          local current_repo="$GITHUB_REPOSITORY"
+          if [ -z "$current_repo" ]; then
+            current_repo=$(git remote get-url origin | sed 's|.*github.com[:/]||' | sed 's|\.git$||')
+          fi
+
+          if [ -z "$current_repo" ]; then
+            echo "Warning: Cannot determine current repository"
+            return 1
+          fi
+
           local issue_title="Missing upstream repository: $package_name"
           local issue_body="The upstream repository for \`$package_name\` appears to be missing or inaccessible.
 
@@ -76,7 +87,7 @@ Please investigate and either:
           local existing_issues=$(curl -s \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/ocicl/request-system-additions-here/issues?state=open" \
+            "https://api.github.com/repos/$current_repo/issues?state=open" \
             | grep -c "\"title\": \"$issue_title\"" || true)
 
           if [ "$existing_issues" -gt 0 ]; then
@@ -90,7 +101,7 @@ Please investigate and either:
             -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/ocicl/request-system-additions-here/issues" \
+            "https://api.github.com/repos/$current_repo/issues" \
             -d "{\"title\":\"$issue_title\",\"body\":$(echo "$issue_body" | jq -Rs .)}")
 
           local http_code=$(echo "$response" | tail -1)
