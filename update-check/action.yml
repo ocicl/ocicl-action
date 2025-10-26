@@ -65,7 +65,7 @@ runs:
           echo "Current hash: $CURRENT_HASH"
 
           # Fetch latest commit from upstream repo
-          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD | cut -f1 | cut -c1-7)
+          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD | head -1 | cut -f1 | cut -c1-7)
           echo "Latest hash: $LATEST_HASH"
 
           if [ "$CURRENT_HASH" != "$LATEST_HASH" ]; then
