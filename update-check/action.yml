@@ -105,11 +105,12 @@ runs:
             REPO=$(echo "$UPSTREAM" | sed 's|.*github.com/||' | sed 's|\.git$||')
             echo "GitHub repo: $REPO"
 
-            # Fetch latest release tag
-            LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//')
+            # Fetch latest release tag (use || true to prevent early exit on failure)
+            LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
 
             # If no releases, try tags
             if [ -z "$LATEST_VERSION" ]; then
+              echo "No releases found, checking tags..."
               LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
             fi
 
