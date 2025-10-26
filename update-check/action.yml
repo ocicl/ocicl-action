@@ -11,6 +11,10 @@ inputs:
     description: 'Path to README file'
     required: false
     default: 'README.org'
+  github-token:
+    description: 'GitHub token for creating issues (required for missing repo detection)'
+    required: false
+    default: ''
 
 outputs:
   updated:
@@ -26,9 +30,80 @@ runs:
       run: |
         README="${{ inputs.readme-path }}"
         UPSTREAM="${{ inputs.upstream-repo }}"
+        GITHUB_TOKEN="${{ inputs.github-token }}"
 
         # Default to no update
         echo "updated=false" >> $GITHUB_OUTPUT
+
+        # Function to create issue for missing repo
+        create_missing_repo_issue() {
+          local repo_url="$1"
+          local package_name="$2"
+
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "Warning: Cannot create issue - GITHUB_TOKEN not provided"
+            return 1
+          fi
+
+          # Extract package/project name from README or path
+          if [ -z "$package_name" ]; then
+            package_name=$(grep '^| name  *|' "$README" | awk '{print $4}' | head -1)
+          fi
+
+          if [ -z "$package_name" ]; then
+            package_name=$(basename $(pwd))
+          fi
+
+          local issue_title="Missing upstream repository: $package_name"
+          local issue_body="The upstream repository for \`$package_name\` appears to be missing or inaccessible.
+
+**Repository URL:** $repo_url
+
+**Current README:** $README
+
+The repository may have been:
+- Deleted or moved
+- Made private
+- Renamed without a redirect
+
+Please investigate and either:
+1. Update the source URL in the README if the repository moved
+2. Find an alternative source
+3. Archive this package if no longer maintained"
+
+          # Check if issue already exists
+          echo "Checking for existing issues about missing repo..."
+          local existing_issues=$(curl -s \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/ocicl/request-system-additions-here/issues?state=open" \
+            | grep -c "\"title\": \"$issue_title\"" || true)
+
+          if [ "$existing_issues" -gt 0 ]; then
+            echo "Issue already exists for missing repo: $repo_url"
+            return 0
+          fi
+
+          # Create the issue
+          echo "Creating issue for missing repo: $repo_url"
+          local response=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/ocicl/request-system-additions-here/issues" \
+            -d "{\"title\":\"$issue_title\",\"body\":$(echo "$issue_body" | jq -Rs .)}")
+
+          local http_code=$(echo "$response" | tail -1)
+
+          if [ "$http_code" = "201" ]; then
+            echo "Successfully created issue for missing repo"
+            return 0
+          else
+            echo "Failed to create issue (HTTP $http_code)"
+            echo "$response" | head -n -1
+            return 1
+          fi
+        }
 
         # If upstream not provided, extract from README source line
         if [ -z "$UPSTREAM" ]; then
@@ -71,7 +146,15 @@ runs:
           echo "Current hash: $CURRENT_HASH"
 
           # Fetch latest commit from upstream repo
-          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD | head -1 | cut -f1 | cut -c1-7)
+          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD 2>&1 | head -1 | cut -f1 | cut -c1-7)
+
+          # Check if git ls-remote failed (repo missing/inaccessible)
+          if [ -z "$LATEST_HASH" ] || git ls-remote "$UPSTREAM" HEAD 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
+            echo "Warning: Unable to access repository: $UPSTREAM"
+            create_missing_repo_issue "$UPSTREAM" ""
+            exit 0
+          fi
+
           echo "Latest hash: $LATEST_HASH"
 
           if [ "$CURRENT_HASH" != "$LATEST_HASH" ]; then
@@ -105,13 +188,30 @@ runs:
             REPO=$(echo "$UPSTREAM" | sed 's|.*github.com/||' | sed 's|\.git$||')
             echo "GitHub repo: $REPO"
 
-            # Fetch latest release tag (use || true to prevent early exit on failure)
-            LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
+            # Fetch latest release tag (check for repo existence)
+            API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest")
+            HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
+            API_BODY=$(echo "$API_RESPONSE" | sed '$d')
+
+            if [ "$HTTP_CODE" = "404" ]; then
+              echo "Warning: Repository not found: $UPSTREAM"
+              create_missing_repo_issue "$UPSTREAM" ""
+              exit 0
+            fi
+
+            LATEST_VERSION=$(echo "$API_BODY" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
 
             # If no releases, try tags
             if [ -z "$LATEST_VERSION" ]; then
               echo "No releases found, checking tags..."
-              LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+              LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+
+              # Check if git ls-remote failed
+              if [ -z "$LATEST_VERSION" ] || git ls-remote --tags "$UPSTREAM" 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
+                echo "Warning: Unable to access repository: $UPSTREAM"
+                create_missing_repo_issue "$UPSTREAM" ""
+                exit 0
+              fi
             fi
 
           elif echo "$UPSTREAM" | grep -q 'git\.sr\.ht'; then
@@ -119,7 +219,14 @@ runs:
             echo "SourceHut repo: $UPSTREAM"
 
             # Fetch latest tag
-            LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+            LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+
+            # Check if git ls-remote failed
+            if [ -z "$LATEST_VERSION" ] || git ls-remote --tags "$UPSTREAM" 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
+              echo "Warning: Unable to access repository: $UPSTREAM"
+              create_missing_repo_issue "$UPSTREAM" ""
+              exit 0
+            fi
           fi
 
           echo "Latest version: $LATEST_VERSION"
