@@ -144,7 +144,7 @@ runs:
           echo "Current hash: $CURRENT_HASH"
 
           # Fetch latest commit from upstream repo
-          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD 2>&1 | head -1 | cut -f1 | cut -c1-7)
+          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD 2>&1 | head -1 | cut -f1 | cut -c1-7 || true)
 
           # Check if git ls-remote failed (repo missing/inaccessible)
           if [ -z "$LATEST_HASH" ] || git ls-remote "$UPSTREAM" HEAD 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
@@ -202,7 +202,7 @@ runs:
             # If no releases, try tags
             if [ -z "$LATEST_VERSION" ]; then
               echo "No releases found, checking tags..."
-              LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+              LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//' || true)
 
               # Check if git ls-remote failed
               if [ -z "$LATEST_VERSION" ] || git ls-remote --tags "$UPSTREAM" 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
@@ -217,7 +217,7 @@ runs:
             echo "SourceHut repo: $UPSTREAM"
 
             # Fetch latest tag
-            LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+            LATEST_VERSION=$(git ls-remote --tags "$UPSTREAM" 2>&1 | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//' || true)
 
             # Check if git ls-remote failed
             if [ -z "$LATEST_VERSION" ] || git ls-remote --tags "$UPSTREAM" 2>&1 | grep -qE '(fatal|error|Repository not found|Could not read)'; then
