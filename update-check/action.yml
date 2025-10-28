@@ -194,17 +194,12 @@ runs:
             REPO=$(echo "$UPSTREAM" | sed 's|.*github.com/||' | sed 's|\.git$||')
             echo "GitHub repo: $REPO"
 
-            # Fetch latest release tag (check for repo existence)
+            # Fetch latest release tag
             API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest")
             HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
             API_BODY=$(echo "$API_RESPONSE" | sed '$d')
 
-            if [ "$HTTP_CODE" = "404" ]; then
-              echo "Warning: Repository not found: $UPSTREAM"
-              create_missing_repo_issue "$UPSTREAM" ""
-              exit 0
-            fi
-
+            # Extract version from release (404 just means no releases, not missing repo)
             LATEST_VERSION=$(echo "$API_BODY" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
 
             # If no releases, try tags
