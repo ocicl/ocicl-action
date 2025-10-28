@@ -66,7 +66,7 @@ runs:
           fi
 
           local issue_title="Missing upstream repository: $package_name"
-          local issue_body="The upstream repository for '\''$package_name'\'' appears to be missing or inaccessible.
+          local issue_body="The upstream repository for \"$package_name\" appears to be missing or inaccessible.
 
 **Repository URL:** $repo_url
 
