@@ -74,7 +74,7 @@ runs:
 
           local issue_title="Missing upstream repository: $package_name"
           local issue_body
-          issue_body=$(printf "The upstream repository for %s appears to be missing or inaccessible.\n\nRepository URL: %s\n\nCurrent README: %s\n\nThe repository may have been:\n- Deleted or moved\n- Made private\n- Renamed without a redirect\n\nPlease investigate and either:\n1. Update the source URL in the README if the repository moved\n2. Find an alternative source\n3. Archive this package if no longer maintained" "$package_name" "$repo_url" "$README")
+          issue_body=$(printf "The upstream repository for %s appears to be missing or inaccessible.\n\nRepository URL: %s\n\nThe repository may have been:\n- Deleted or moved\n- Made private\n- Renamed without a redirect\n\nPlease investigate and either:\n1. Update the source URL in the README if the repository moved\n2. Find an alternative source\n3. Archive this package if no longer maintained" "$package_name" "$repo_url")
 
           # Check if issue already exists
           echo "Checking for existing issues about missing repo..."
@@ -166,8 +166,8 @@ runs:
           if [ "$CURRENT_HASH" != "$LATEST_HASH" ]; then
             echo "Update detected: $CURRENT_HASH -> $LATEST_HASH"
 
-            # Update the hash in README
-            sed -i "s/^| commit  | [a-f0-9]\{7\}\( *\)|/| commit  | $LATEST_HASH\1|/" "$README"
+            # Update the hash in README (handle both 7 and 8 character hashes)
+            sed -i "s/^| commit  | [a-f0-9]\{7,8\}\( *\)|/| commit  | $LATEST_HASH\1|/" "$README"
 
             # Commit and push
             git config --local user.email "github-actions[bot]@users.noreply.github.com"
