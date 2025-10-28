@@ -42,7 +42,7 @@ runs:
 
           if [ -z "$GITHUB_TOKEN" ]; then
             echo "Warning: Cannot create issue - GITHUB_TOKEN not provided"
-            return 1
+            return 0
           fi
 
           # Extract package/project name from README or path
@@ -62,7 +62,7 @@ runs:
 
           if [ -z "$current_repo" ]; then
             echo "Warning: Cannot determine current repository"
-            return 1
+            return 0
           fi
 
           local issue_title="Missing upstream repository: $package_name"
@@ -99,7 +99,7 @@ runs:
           else
             echo "Failed to create issue (HTTP $http_code)"
             echo "$response" | head -n -1
-            return 1
+            return 0
           fi
         }
 
