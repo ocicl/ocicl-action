@@ -112,7 +112,7 @@ runs:
 
         # If upstream not provided, extract from README source or file line
         if [ -z "$UPSTREAM" ]; then
-          SOURCE_URL=$(grep -E '^| (source|file)  *\|' "$README" | awk '{print $4}' | sed 's/^git://' | sed 's/^file://')
+          SOURCE_URL=$(grep -E '^\| (source|file)  *\|' "$README" | awk '{print $4}' | sed 's/^git://' | sed 's/^file://')
 
           # Extract repo URL from tarball/archive URLs
           if echo "$SOURCE_URL" | grep -q '/archive/'; then
