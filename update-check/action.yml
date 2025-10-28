@@ -14,7 +14,7 @@ inputs:
   github-token:
     description: 'GitHub token for creating issues (automatically uses github.token if not provided)'
     required: false
-    default: ${{ github.token }}
+    default: ''
 
 outputs:
   updated:
@@ -30,7 +30,13 @@ runs:
       run: |
         README="${{ inputs.readme-path }}"
         UPSTREAM="${{ inputs.upstream-repo }}"
-        GITHUB_TOKEN="${{ inputs.github-token }}"
+        INPUT_TOKEN="${{ inputs.github-token }}"
+
+        # Use input token if provided, otherwise fall back to GITHUB_TOKEN env var
+        if [ -n "$INPUT_TOKEN" ]; then
+          GITHUB_TOKEN="$INPUT_TOKEN"
+        fi
+        # GITHUB_TOKEN env var is already set by GitHub Actions if available
 
         # Default to no update
         echo "updated=false" >> $GITHUB_OUTPUT
