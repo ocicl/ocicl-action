@@ -54,7 +54,7 @@ runs:
 
           # Extract package/project name from README or path
           if [ -z "$package_name" ]; then
-            package_name=$(grep '^| name  *|' "$README" | awk '{print $4}' | head -1)
+            package_name=$(grep '^| name  *|' "$README" | awk '{print $4}' | head -1 || true)
           fi
 
           if [ -z "$package_name" ]; then
