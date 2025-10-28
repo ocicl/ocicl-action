@@ -12,9 +12,9 @@ inputs:
     required: false
     default: 'README.org'
   github-token:
-    description: 'GitHub token for creating issues (required for missing repo detection)'
+    description: 'GitHub token for creating issues (automatically uses github.token if not provided)'
     required: false
-    default: ''
+    default: ${{ github.token }}
 
 outputs:
   updated:
