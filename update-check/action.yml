@@ -28,6 +28,7 @@ runs:
       id: check
       shell: bash
       run: |
+        set -x  # Enable debug tracing
         README="${{ inputs.readme-path }}"
         UPSTREAM="${{ inputs.upstream-repo }}"
         INPUT_TOKEN="${{ inputs.github-token }}"
