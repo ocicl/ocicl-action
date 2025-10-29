@@ -166,8 +166,8 @@ runs:
           if [ "$CURRENT_HASH" != "$LATEST_HASH" ]; then
             echo "Update detected: $CURRENT_HASH -> $LATEST_HASH"
 
-            # Update the hash in README (handle both 7 and 8 character hashes)
-            sed -i "s/^| commit  | [a-f0-9]\{7,8\}\( *\)|/| commit  | $LATEST_HASH\1|/" "$README"
+            # Update the hash in README (handle both 7 and 8 character hashes, with or without trailing |)
+            sed -i "s/^| commit  | [a-f0-9]\{7,8\}\( *|\?\)/| commit  | $LATEST_HASH\1/" "$README"
 
             # Commit and push
             git config --local user.email "github-actions[bot]@users.noreply.github.com"
