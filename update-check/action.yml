@@ -129,9 +129,9 @@ runs:
           echo "Extracted upstream from README: $UPSTREAM"
         fi
 
-        # Check if upstream is GitHub or SourceHut
-        if ! echo "$UPSTREAM" | grep -qE '(github\.com|git\.sr\.ht)'; then
-          echo "Skipping: Only GitHub and SourceHut are supported"
+        # Check if upstream is GitHub, SourceHut, or Codeberg
+        if ! echo "$UPSTREAM" | grep -qE '(github\.com|git\.sr\.ht|codeberg\.org)'; then
+          echo "Skipping: Only GitHub, SourceHut, and Codeberg are supported"
           echo "Upstream: $UPSTREAM"
           exit 0
         fi
@@ -196,6 +196,34 @@ runs:
 
             # Fetch latest release tag
             API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest")
+            HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
+            API_BODY=$(echo "$API_RESPONSE" | sed '$d')
+
+            # Extract version from release (404 just means no releases, not missing repo)
+            LATEST_VERSION=$(echo "$API_BODY" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
+
+            # If no releases, try tags
+            if [ -z "$LATEST_VERSION" ]; then
+              echo "No releases found, checking tags..."
+              TAG_OUTPUT=$(git ls-remote --tags "$UPSTREAM" 2>&1 || true)
+
+              # Check if git ls-remote failed
+              if echo "$TAG_OUTPUT" | grep -qE '(fatal|error|Repository not found|Could not read)'; then
+                echo "Warning: Unable to access repository: $UPSTREAM"
+                create_missing_repo_issue "$UPSTREAM" ""
+                exit 0
+              fi
+
+              LATEST_VERSION=$(echo "$TAG_OUTPUT" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+            fi
+
+          elif echo "$UPSTREAM" | grep -q 'codeberg\.org'; then
+            # Codeberg releases (uses Forgejo API)
+            REPO=$(echo "$UPSTREAM" | sed 's|.*codeberg.org/||' | sed 's|\.git$||')
+            echo "Codeberg repo: $REPO"
+
+            # Fetch latest release tag using Forgejo API
+            API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://codeberg.org/api/v1/repos/$REPO/releases/latest")
             HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
             API_BODY=$(echo "$API_RESPONSE" | sed '$d')
 
