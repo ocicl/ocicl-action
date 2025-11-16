@@ -42,6 +42,36 @@ runs:
         # Default to no update
         echo "updated=false" >> $GITHUB_OUTPUT
 
+        # Function to retry commands with exponential backoff
+        retry_with_backoff() {
+          local max_attempts=5
+          local timeout=1
+          local attempt=1
+          local exit_code=0
+
+          while [ $attempt -le $max_attempts ]; do
+            if [ $attempt -gt 1 ]; then
+              echo "Retry attempt $attempt of $max_attempts (waiting ${timeout}s)..."
+              sleep $timeout
+            fi
+
+            # Execute the command
+            "$@"
+            exit_code=$?
+
+            if [ $exit_code -eq 0 ]; then
+              return 0
+            fi
+
+            # Double the timeout for next attempt (exponential backoff)
+            timeout=$((timeout * 2))
+            attempt=$((attempt + 1))
+          done
+
+          echo "Command failed after $max_attempts attempts"
+          return $exit_code
+        }
+
         # Function to create issue for missing repo
         create_missing_repo_issue() {
           local repo_url="$1"
@@ -150,13 +180,20 @@ runs:
           CURRENT_HASH=$(grep '^| commit  |' "$README" | awk '{print $4}')
           echo "Current hash: $CURRENT_HASH"
 
-          # Fetch latest commit from upstream repo
-          LATEST_HASH=$(git ls-remote "$UPSTREAM" HEAD 2>&1 | head -1 | cut -f1 | cut -c1-7 || true)
+          # Fetch latest commit from upstream repo with retry
+          TEMP_OUTPUT=$(mktemp)
+          if retry_with_backoff bash -c "git ls-remote '$UPSTREAM' HEAD 2>&1 | head -1 > '$TEMP_OUTPUT'"; then
+            LATEST_HASH=$(cat "$TEMP_OUTPUT" | cut -f1 | cut -c1-7)
+            rm -f "$TEMP_OUTPUT"
+          else
+            rm -f "$TEMP_OUTPUT"
+            LATEST_HASH=""
+          fi
 
           # Check if git ls-remote failed (repo missing/inaccessible)
           # Valid hash should be 7 hexadecimal characters
           if [ -z "$LATEST_HASH" ] || ! echo "$LATEST_HASH" | grep -qE '^[0-9a-f]{7}$'; then
-            echo "Warning: Unable to access repository: $UPSTREAM"
+            echo "Warning: Unable to access repository after retries: $UPSTREAM"
             create_missing_repo_issue "$UPSTREAM" ""
             exit 0
           fi
@@ -194,8 +231,15 @@ runs:
             REPO=$(echo "$UPSTREAM" | sed 's|.*github.com/||' | sed 's|\.git$||')
             echo "GitHub repo: $REPO"
 
-            # Fetch latest release tag
-            API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest")
+            # Fetch latest release tag with retry
+            TEMP_OUTPUT=$(mktemp)
+            if retry_with_backoff bash -c "curl -s -w '\n%{http_code}' 'https://api.github.com/repos/$REPO/releases/latest' > '$TEMP_OUTPUT'"; then
+              API_RESPONSE=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            else
+              API_RESPONSE=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            fi
             HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
             API_BODY=$(echo "$API_RESPONSE" | sed '$d')
 
@@ -205,11 +249,18 @@ runs:
             # If no releases, try tags
             if [ -z "$LATEST_VERSION" ]; then
               echo "No releases found, checking tags..."
-              TAG_OUTPUT=$(git ls-remote --tags "$UPSTREAM" 2>&1 || true)
+              TEMP_OUTPUT=$(mktemp)
+              if retry_with_backoff bash -c "git ls-remote --tags '$UPSTREAM' 2>&1 > '$TEMP_OUTPUT'"; then
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              else
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              fi
 
               # Check if git ls-remote failed
               if echo "$TAG_OUTPUT" | grep -qE '(fatal|error|Repository not found|Could not read)'; then
-                echo "Warning: Unable to access repository: $UPSTREAM"
+                echo "Warning: Unable to access repository after retries: $UPSTREAM"
                 create_missing_repo_issue "$UPSTREAM" ""
                 exit 0
               fi
@@ -222,8 +273,15 @@ runs:
             REPO=$(echo "$UPSTREAM" | sed 's|.*codeberg.org/||' | sed 's|\.git$||')
             echo "Codeberg repo: $REPO"
 
-            # Fetch latest release tag using Forgejo API
-            API_RESPONSE=$(curl -s -w "\n%{http_code}" "https://codeberg.org/api/v1/repos/$REPO/releases/latest")
+            # Fetch latest release tag using Forgejo API with retry
+            TEMP_OUTPUT=$(mktemp)
+            if retry_with_backoff bash -c "curl -s -w '\n%{http_code}' 'https://codeberg.org/api/v1/repos/$REPO/releases/latest' > '$TEMP_OUTPUT'"; then
+              API_RESPONSE=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            else
+              API_RESPONSE=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            fi
             HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
             API_BODY=$(echo "$API_RESPONSE" | sed '$d')
 
@@ -233,11 +291,18 @@ runs:
             # If no releases, try tags
             if [ -z "$LATEST_VERSION" ]; then
               echo "No releases found, checking tags..."
-              TAG_OUTPUT=$(git ls-remote --tags "$UPSTREAM" 2>&1 || true)
+              TEMP_OUTPUT=$(mktemp)
+              if retry_with_backoff bash -c "git ls-remote --tags '$UPSTREAM' 2>&1 > '$TEMP_OUTPUT'"; then
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              else
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              fi
 
               # Check if git ls-remote failed
               if echo "$TAG_OUTPUT" | grep -qE '(fatal|error|Repository not found|Could not read)'; then
-                echo "Warning: Unable to access repository: $UPSTREAM"
+                echo "Warning: Unable to access repository after retries: $UPSTREAM"
                 create_missing_repo_issue "$UPSTREAM" ""
                 exit 0
               fi
@@ -249,12 +314,19 @@ runs:
             # SourceHut tags
             echo "SourceHut repo: $UPSTREAM"
 
-            # Fetch latest tag
-            TAG_OUTPUT=$(git ls-remote --tags "$UPSTREAM" 2>&1 || true)
+            # Fetch latest tag with retry
+            TEMP_OUTPUT=$(mktemp)
+            if retry_with_backoff bash -c "git ls-remote --tags '$UPSTREAM' 2>&1 > '$TEMP_OUTPUT'"; then
+              TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            else
+              TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+              rm -f "$TEMP_OUTPUT"
+            fi
 
             # Check if git ls-remote failed
             if echo "$TAG_OUTPUT" | grep -qE '(fatal|error|Repository not found|Could not read)'; then
-              echo "Warning: Unable to access repository: $UPSTREAM"
+              echo "Warning: Unable to access repository after retries: $UPSTREAM"
               create_missing_repo_issue "$UPSTREAM" ""
               exit 0
             fi
