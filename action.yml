@@ -16,7 +16,6 @@ runs:
     - uses: oras-project/setup-oras@v1
     - shell: bash
       run: oras version
-    - uses: actions/checkout@v4
     - shell: bash
       run: rm -rf */.qlot
     - uses: actions/cache@v4
