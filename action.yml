@@ -100,7 +100,7 @@ runs:
           done
         }
         set -x
-        NOTE="--annotation \"org.opencontainers.image.source=https://github.com/ocicl/REPO=\""
+        ANNOTATION="--annotation org.opencontainers.image.source=https://github.com/${{ github.repository }}"
         NAME=$(cat NAME)
         FILE=$(cd src; ls ${NAME}-*.tar.gz)
         gpg -k
@@ -109,7 +109,7 @@ runs:
         for S in $(cat SYSTEMS); do
           S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
           S=$(echo ${S} | sed 's/\//_slash_/g')
-          retry_command oras push ghcr.io/ocicl/${S}.sha256sum.sig:latest ${FILE}.sha256sum.sig:application/vnd.ocicl.lisp-system.sig
+          retry_command oras push ${ANNOTATION} ghcr.io/ocicl/${S}.sha256sum.sig:latest ${FILE}.sha256sum.sig:application/vnd.ocicl.lisp-system.sig
           retry_command oras tag ghcr.io/ocicl/${S}.sha256sum.sig:latest $(cat ~/_00_OCICL_VERSION)
           retry_command oras push docker.io/ocicl/${S}.sha256sum.sig:latest ${FILE}.sha256sum.sig:application/vnd.ocicl.lisp-system.sig
           retry_command oras tag docker.io/ocicl/${S}.sha256sum.sig:latest $(cat ~/_00_OCICL_VERSION)
@@ -127,7 +127,7 @@ runs:
           for S in $(cat SYSTEMS); do
             S=$(echo ${S} | sed 's/+$/_plus/g' | sed 's/+/_plus_/g')
             S=$(echo ${S} | sed 's/\//_slash_/g')
-            retry_command oras push ghcr.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.ocicl.lisp-system.changes.txt
+            retry_command oras push ${ANNOTATION} ghcr.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.ocicl.lisp-system.changes.txt
             retry_command oras push docker.io/ocicl/${S}-changes.txt:$(cat ~/_00_OCICL_VERSION) ${NAME}-changes.txt:application/vnd.ocicl.lisp-system.changes.txt
           done
         fi
