@@ -159,12 +159,20 @@ runs:
           echo "Extracted upstream from README: $UPSTREAM"
         fi
 
-        # Check if upstream is GitHub, SourceHut, or Codeberg
-        if ! echo "$UPSTREAM" | grep -qE '(github\.com|git\.sr\.ht|codeberg\.org)'; then
-          echo "Skipping: Only GitHub, SourceHut, and Codeberg are supported"
-          echo "Upstream: $UPSTREAM"
-          exit 0
-        fi
+        # Function to detect if a host is a GitLab instance
+        # Probes /api/v4/version (unauthenticated, returns 401 on private instances but still 200-level on public ones)
+        is_gitlab_instance() {
+          local host="$1"
+          local http_code
+          http_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "https://$host/api/v4/version" 2>/dev/null)
+          # 200 = public GitLab, 401 = private GitLab (auth required but it IS GitLab)
+          [ "$http_code" = "200" ] || [ "$http_code" = "401" ]
+        }
+
+        # Extract host from upstream URL
+        extract_host() {
+          echo "$1" | sed 's|https\?://||' | sed 's|/.*||'
+        }
 
         # Skip mfiano repos (github.com/mfiano has disappeared)
         if echo "$UPSTREAM" | grep -q 'github\.com/mfiano'; then
@@ -332,6 +340,54 @@ runs:
             fi
 
             LATEST_VERSION=$(echo "$TAG_OUTPUT" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+
+          else
+            # Unknown host -- detect GitLab instances, otherwise fall back to git tags
+            UPSTREAM_HOST=$(extract_host "$UPSTREAM")
+            echo "Unknown host: $UPSTREAM_HOST"
+
+            if is_gitlab_instance "$UPSTREAM_HOST"; then
+              # GitLab API: extract project path and URL-encode it
+              GITLAB_PATH=$(echo "$UPSTREAM" | sed "s|https\?://$UPSTREAM_HOST/||" | sed 's|\.git$||')
+              ENCODED_PATH=$(echo "$GITLAB_PATH" | sed 's|/|%2F|g')
+              echo "Detected GitLab instance at $UPSTREAM_HOST, project: $GITLAB_PATH"
+
+              # Fetch latest release tag using GitLab API with retry
+              TEMP_OUTPUT=$(mktemp)
+              if retry_with_backoff bash -c "curl -s -w '\n%{http_code}' 'https://$UPSTREAM_HOST/api/v4/projects/$ENCODED_PATH/releases' > '$TEMP_OUTPUT'"; then
+                API_RESPONSE=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              else
+                API_RESPONSE=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              fi
+              HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
+              API_BODY=$(echo "$API_RESPONSE" | sed '$d')
+
+              # GitLab returns releases sorted newest-first; extract first tag_name
+              LATEST_VERSION=$(echo "$API_BODY" | grep '"tag_name"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^release-//' | sed 's/^v//' || true)
+            fi
+
+            # Fall back to git tags for non-GitLab hosts or if GitLab API returned nothing
+            if [ -z "$LATEST_VERSION" ]; then
+              echo "Falling back to git ls-remote --tags..."
+              TEMP_OUTPUT=$(mktemp)
+              if retry_with_backoff bash -c "git ls-remote --tags '$UPSTREAM' 2>&1 > '$TEMP_OUTPUT'"; then
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              else
+                TAG_OUTPUT=$(cat "$TEMP_OUTPUT")
+                rm -f "$TEMP_OUTPUT"
+              fi
+
+              if echo "$TAG_OUTPUT" | grep -qE '(fatal|error|Repository not found|Could not read)'; then
+                echo "Warning: Unable to access repository after retries: $UPSTREAM"
+                create_missing_repo_issue "$UPSTREAM" ""
+                exit 0
+              fi
+
+              LATEST_VERSION=$(echo "$TAG_OUTPUT" | grep -v '\^{}' | tail -1 | sed 's|.*/||' | sed 's/^release-//' | sed 's/^v//')
+            fi
           fi
 
           echo "Latest version: $LATEST_VERSION"
